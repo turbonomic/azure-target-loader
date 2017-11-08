@@ -8,13 +8,13 @@ Use this script to add Azure targets into Turbonomic using a CSV file as well as
 
 The CSV file must have the following columns:
 
-    * Address
-    * Tenant Name
-    * Username
-    * Client Id
-    * Client Secret Key
-    * Proxy Host
-    * Proxy Port
+* Address
+* Tenant Name
+* Username
+* Client Id
+* Client Secret Key
+* Proxy Host
+* Proxy Port
 
 Make sure that all columns are present in the CSV. Proxy Host and Proxy Host values are not mandatory for individual rows, but the columns must be present in the Csv.
 
