@@ -153,14 +153,11 @@ function CreateAzureTarget($Address, $TenantName, $Username, $ClientId, $ClientS
     Invoke-RestMethod -Uri $uri -Method Post -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo); "Content-Type"="application/json"} -Body $targetDTOJson -ErrorAction SilentlyContinue
     $output = "{0} target added." -f $Address
     Write-Information $output
-    
-    
-    
 }
 
 # This function will add the appropriate Azure roles to the Application ID specific for Turbonomic to target it
 function SetAzurePermissions ($ApplicationId, $SubscriptionId) {
-    $objectId = Get-AzureRmADApplication -ApplicationId $ApplicationId | Select-Object -ExpandProperty ObjectId 
+    $objectId = Get-AzureRmADServicePrincipal | Where-Object {$_.ApplicationId -eq $ApplicationId} | Select-Object -ExpandProperty Id  | select-object -ExpandProperty Guid
     if($objectId -ne $null){
         $scope = "/subscriptions/{0}" -f $subscriptionId
         New-AzureRmRoleAssignment -ObjectId $objectId -Scope $scope -RoleDefinitionName Reader
