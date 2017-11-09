@@ -77,8 +77,16 @@ param (
 # Because Turbonomic is normally installed with self-signed certs, we need PowerShell to allow a self-signed cert.
 function _SetCertPolicy {
     if ($PSVersionTable.PSEdition -eq 'Core') {
-        $PSDefaultParameterValues.Add("Invoke-RestMethod:SkipCertificateCheck", $true)
-        $PSDefaultParameterValues.Add("Invoke-WebRequest:SkipCertificateCheck", $true)
+        if ($PSDefaultParameterValues.Contains("Invoke-RestMethod:SkipCertificateCheck")){
+            $PSDefaultParameterValues["Invoke-RestMethod:SkipCertificateCheck"] = $true
+        } else {
+            $PSDefaultParameterValues.Add("Invoke-RestMethod:SkipCertificateCheck", $true)
+        }
+        if ($PSDefaultParameterValues.Contains("Invoke-WebRequest:SkipCertificateCheck")){
+            $PSDefaultParameterValues["Invoke-WebRequest:SkipCertificateCheck"] = $true
+        } else {
+            $PSDefaultParameterValues.Add("Invoke-WebRequest:SkipCertificateCheck", $true)
+        }
     } else {
         Add-Type -TypeDefinition @"
         using System.Net;
@@ -166,6 +174,13 @@ function SetAzurePermissions ($ApplicationId, $SubscriptionId) {
 
 
 # Script starts here
+try {
+    $targets = ReadCsvFile $CsvFilePath
+} catch {
+    Write-Error -Message "CSV file at $CsvFilePath could not be read."
+    exit
+}
+
 _SetCertPolicy
 
 $protocol = "http"
@@ -186,11 +201,7 @@ if($AddMode -ne "AzurePermissionsOnly") {
     $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $TurboCredential.username,$TurboPassword)))
 }
 
-try {
-    $targets = ReadCsvFile $CsvFilePath
-} catch {
-    exit
-}
+
 
 if($AddMode -ne "TargetsOnly") {
     CheckAzureModule
