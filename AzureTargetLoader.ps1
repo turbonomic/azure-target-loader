@@ -137,12 +137,26 @@ function CreateAzureTarget($Address, $TenantName, $Username, $ClientId, $ClientS
     $targetDTOJson = $targetDTO | ConvertTo-Json
     $uri = "{0}://{1}/vmturbo/rest/targets" -f $protocol, $TurboInstance
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    if (-Not (Invoke-RestMethod -Uri $uri -Method Post -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo); "Content-Type"="application/json"} -Body $targetDTOJson -ErrorAction SilentlyContinue)){
+    Invoke-RestMethod -Uri $uri -Method Post -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo); "Content-Type"="application/json"} -Body $targetDTOJson -ErrorAction SilentlyContinue
+    $output = "{0} target added." -f $Address
+    Write-Information $output
+    
+    
+    
+}
+
+# This function will add the appropriate Azure roles to the Application ID specific for Turbonomic to target it
+function SetAzurePermissions ($ApplicationId, $SubscriptionId) {
+    $objectId = Get-AzureRmADApplication -ApplicationId $ApplicationId | Select-Object -ExpandProperty ObjectId 
+    if($objectId -ne $null){
+        $scope = "/subscriptions/{0}" -f $subscriptionId
+        New-AzureRmRoleAssignment -ObjectId $objectId -Scope $scope -RoleDefinitionName Reader
+        New-AzureRmRoleAssignment -ObjectId $objectId -Scope $scope -RoleDefinitionName "Storage Account Contributor"
+    } else {
+        Write-Error -Message "Invalid ApplicationId: $ApplicationId"
         exit
     }
     
-    $output = "{0} target added." -f $Address
-    Write-Host $output
 }
 
 
@@ -175,16 +189,15 @@ try {
 
 if($AddMode -ne "TargetsOnly") {
     CheckAzureModule
-    Read-Host -Prompt "This script will now use your Azure credentials to access Azure PowerShell. The user you use to log in should have the appropriate privelege to add the Reader role to all users in the CSV file provided. 
-Press Enter to continue."
+    Read-Host -Prompt "This script will now use your Azure credentials to access Azure PowerShell. The user you use to log in should have the appropriate privelege to add the Reader role to all users in the CSV file provided.
+Press Enter to continue"
     Login-AzureRmAccount
 }
 
 # Go through each item in the CSV and add the permission to Azure and/or add the Target to Turbo
 foreach ($target in $targets) {
     if ($AddMode -ne "TargetsOnly") {
-        New-AzureRmRoleAssignment -ObjectId $target."Client Id" -Scope "/subscriptions/${target.'User Name'}" -RoleDefinitionName Reader
-        New-AzureRmRoleAssignment -ObjectId $target."Client Id" -Scope "/subscriptions/${target.'User Name'}" -RoleDefinitionName StorageContributor
+        SetAzurePermissions $target."Client Id" $target."Username"
     }
 
     if ($AddMode -ne "AzurePermissionsOnly") {
