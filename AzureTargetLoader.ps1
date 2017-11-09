@@ -17,6 +17,8 @@ The CSV file must have the following columns:
 
 Make sure that all columns are present in the CSV. Proxy Host and Proxy Host values are not mandatory for individual rows, but the columns must be present in the Csv.
 
+Note: If you are using PowerShell Core, this script supports PowerShell Core Version 6.0 Beta 9 and above.
+
 .EXAMPLE
 AzureTargetLoader.ps1 -CsvFilePath ./AzureTargets.Csv
 
@@ -73,8 +75,6 @@ param (
 )
 
 # Because Turbonomic is normally installed with self-signed certs, we need PowerShell to allow a self-signed cert.
-# Note: This uses the approved steps for both PowerShell Core (macOS, Linux) as well as PowerShell for Windows. 
-#       Currently, this only works for PowerShell for Windows due to limitations in PowerShell Core.
 function _SetCertPolicy {
     if ($PSVersionTable.PSEdition -eq 'Core') {
         $PSDefaultParameterValues.Add("Invoke-RestMethod:SkipCertificateCheck", $true)
