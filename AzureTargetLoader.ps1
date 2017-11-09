@@ -18,9 +18,14 @@ The CSV file must have the following columns:
 Make sure that all columns are present in the CSV. Proxy Host and Proxy Host values are not mandatory for individual rows, but the columns must be present in the Csv.
 
 .EXAMPLE
+AzureTargetLoader.ps1 -CsvFilePath ./AzureTargets.Csv
+
+This will add the Azure targets specified in the CSV file to the Turbonomic server. It will also add the Reader and Storage Account Contributor role to the users specified in the CSV to the Azure subscription. The script will prompt for all other values.
+
+.EXAMPLE
 AzureTargetLoader.ps1 -TurboInstance turbonomic.mycompany.com -TurboCredential $TurboCred -CsvFilePath ./AzureTargets.Csv
 
-This will add the Azure targets specified in the CSV file to the Turbonomic server turbonomic.mycompany.com using the Turbonomic credentials specified. It will also add the Reader role to the users specified in the CSV to the Azure subscription.
+This will add the Azure targets specified in the CSV file to the Turbonomic server turbonomic.mycompany.com using the Turbonomic credentials specified. It will also add the Reader and Storage Account Contributor role to the users specified in the CSV to the Azure subscription.
 
 .EXAMPLE
 AzureTargetLoader.ps1 -AddMode TargetsOnly -TurboInstance turbonomic.mycompany.com -TurboCredential $TurboCred -CsvFilePath ./AzureTargets.Csv
@@ -30,7 +35,7 @@ This will only add the Azure targets specified in the CSV file to the Turbonomic
 .EXAMPLE
 AzureTargetLoader.ps1 -AddMode AzurePermissionsOnly -CsvFilePath ./AzureTargets.Csv
 
-This will only add the Reader role to the users specified in the CSV to the Azure subscription.. 
+This will only add the Reader and Storage Account Contributor role to the users specified in the CSV to the Azure subscription.
 
 .PARAMETER TurboInstance
 Specify the Turbonomic server hostname, FQDN, or IP address where you are adding the targets.

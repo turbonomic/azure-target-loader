@@ -45,22 +45,28 @@ Boolean value that determines whether to communicate to Turbonomic over https. D
 
 EXAMPLE 1
 =========
-This will add the Azure targets specified in the CSV file to the Turbonomic server turbonomic.mycompany.com using the Turbonomic credentials specified. It will also add the Reader role to the users specified in the CSV to the Azure subscription.
+This will add the Azure targets specified in the CSV file to the Turbonomic server. It will also add the Reader and Storage Account Contributor role to the users specified in the CSV to the Azure subscription. The script will prompt for all other values.
+
+    AzureTargetLoader.ps1 -CsvFilePath ./AzureTargets.Csv
+
+EXAMPLE 2
+=========
+This will add the Azure targets specified in the CSV file to the Turbonomic server turbonomic.mycompany.com using the Turbonomic credentials specified. It will also add the Reader and Storage Account Contributor role to the users specified in the CSV to the Azure subscription.
 
     AzureTargetLoader.ps1 -TurboInstance turbonomic.mycompany.com -TurboCredential $TurboCred -CsvFilePath ./AzureTargets.Csv
 
 
 
-EXAMPLE 2
+EXAMPLE 3
 =========
 This will only add the Azure targets specified in the CSV file to the Turbonomic server turbonomic.mycompany.com using the Turbonomic credentials specified. 
 
     AzureTargetLoader.ps1 -AddMode TargetsOnly -TurboInstance turbonomic.mycompany.com -TurboCredential $TurboCred -CsvFilePath ./AzureTargets.Csv
 
 
-EXAMPLE
-=======
-This will only add the Reader role to the users specified in the CSV to the Azure subscription.
+EXAMPLE 4
+=========
+This will only add the Reader and Storage Account Contributor role to the users specified in the CSV to the Azure subscription.
 
     AzureTargetLoader.ps1 -AddMode AzurePermissionsOnly -CsvFilePath ./AzureTargets.Csv
 
