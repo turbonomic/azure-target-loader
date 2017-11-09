@@ -35,9 +35,9 @@ PARAMETER: AddMode
 ------------------
 Choose whether you want to add only Turbonomic targets, add Azure Permissions, or Both. Default is both. Valid data is:
 
-    - Both
-    - AzurePermissionsOnly
-    - TargetsOnly
+* Both
+* AzurePermissionsOnly
+* TargetsOnly
 
 PARAMETER: TurboHttps
 ---------------------
