@@ -139,7 +139,7 @@ function CreateAzureTarget($Address, $TenantName, $Username, $ClientId, $ClientS
         "inputFields"=@(
             @{"value"=$Address;"name"="address"};
             @{"value"=$TenantName;"name"="tenant"};
-            @{"value"=$Username;"name"="subscription"};
+            @{"value"=$Username;"name"="username"};
             @{"value"=$ClientId;"name"="client"};
             @{"value"=$ClientSecretKey;"name"="key"},
             @{"value"=$ProxyHost;"name"="proxy"};
