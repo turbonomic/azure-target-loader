@@ -3,7 +3,7 @@
 This script will add Azure targets to your Turbonomic instances using a CSV file with the target information.
 
 .DESCRIPTION
-Use this script to add Azure targets into Turbonomic using a CSV file as well as add the Reader role to the Clients specified in the CSV file. 
+Use this script to add Azure targets into Turbonomic using a CSV file as well as add the Reader role to the Clients specified in the CSV file. If the target already exists inside of Turbonomic, this script will update the credentials to what you specify in the CSV. 
 
 The CSV file must have the following columns:
 
@@ -69,7 +69,7 @@ param (
     [string] $CsvFilePath,
 
     [ValidateSet("Both","AzurePermissionsOnly", "TargetsOnly")]
-    [string] $AddMode = "Both",
+    [string] $AddMode = "TargetsOnly",
 
     [bool] $TurboHttps = $true
 )
@@ -155,6 +155,53 @@ function CreateAzureTarget($Address, $TenantName, $Username, $ClientId, $ClientS
     Write-Information $output
 }
 
+function GetAllTargets(){
+    $uri = "{0}://{1}/vmturbo/rest/targets" -f $protocol, $TurboInstance
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-RestMethod -Uri $uri -Method Get -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo); "Content-Type"="application/json"} -ErrorAction SilentlyContinue
+
+}
+
+function GetTargetUUID($username) {
+    Write-Information "Here"
+    $targetUUID = $null
+    foreach($existingTarget in $existingTargets){
+        $targetUN = $existingTarget | Select-Object -ExpandProperty inputFields | Where-Object {$_.Name -eq "Username"}
+        if ($username -eq $targetUN.value){
+            $targetUUID = $existingTarget | Select-Object -ExpandProperty uuid            
+        }
+    }
+    $targetUUID
+}
+
+function UpdateAzureTargetCredentials($uuid, $Address, $TenantName, $Username, $ClientId, $ClientSecretKey, $ProxyHost, $ProxyPort){        
+    $targetDTO = @{
+        "category"="Cloud Management";
+        "type"="Azure";
+        "inputFields"=@(
+            @{"value"=$Address;"name"="address"};
+            @{"value"=$TenantName;"name"="tenant"};
+            @{"value"=$Username;"name"="username"};
+            @{"value"=$ClientId;"name"="client"};
+            @{"value"=$ClientSecretKey;"name"="key"},
+            @{"value"=$ProxyHost;"name"="proxy"};
+            @{"value"=$ProxyPort;"name"="port"});
+        "uuid"=$uuid
+    }
+
+    $targetDTOJson = $targetDTO | ConvertTo-Json
+    $uri = "{0}://{1}/vmturbo/rest/targets/{2}" -f $protocol, $TurboInstance, $uuid
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-RestMethod -Uri $uri -Method Put -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo); "Content-Type"="application/json"} -Body $targetDTOJson -ErrorAction SilentlyContinue
+    $output = "{0} target update." -f $Address
+    Write-Information $output
+}
+
+
+
+
+
+
 # This function will add the appropriate Azure roles to the Application ID specific for Turbonomic to target it
 function SetAzurePermissions ($ApplicationId, $SubscriptionId) {
     $objectId = Get-AzureRmADServicePrincipal | Where-Object {$_.ApplicationId -eq $ApplicationId} | Select-Object -ExpandProperty Id  | select-object -ExpandProperty Guid
@@ -186,6 +233,7 @@ if ($TurboHttps){
 }
 
 if($AddMode -ne "AzurePermissionsOnly") {
+    
     if($TurboCredential -eq $null) {
         $TurboCredential = Get-Credential -Message "Enter the credentials used to sign in to the Turbonomic server."
     }
@@ -196,7 +244,11 @@ if($AddMode -ne "AzurePermissionsOnly") {
 
     $TurboPassword = $TurboCredential.GetNetworkCredential().password
     $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $TurboCredential.username,$TurboPassword)))
+    $existingTargets = GetAllTargets | Where-Object {$_.type -eq "Azure"}
+
 }
+
+
 
 
 
@@ -214,6 +266,15 @@ foreach ($target in $targets) {
     }
 
     if ($AddMode -ne "AzurePermissionsOnly") {
-        CreateAzureTarget $target."Address" $target."Tenant Name" $target."Username" $target."Client Id" $target."Client Secret Key" $target."Proxy Host" $target."Proxy Port"
+            $existingTargetUUID = GetTargetUUID $target."Username"
+
+            
+            if($null -ne $existingTargetUUID){
+                UpdateAzureTargetCredentials $existingTargetUUID $target."Address" $target."Tenant Name" $target."Username" $target."Client Id" $target."Client Secret Key" $target."Proxy Host" $target."Proxy Port"
+            } else {
+                CreateAzureTarget $target."Address" $target."Tenant Name" $target."Username" $target."Client Id" $target."Client Secret Key" $target."Proxy Host" $target."Proxy Port"
+            }
     }
 }
+
+
