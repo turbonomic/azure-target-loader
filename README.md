@@ -4,7 +4,7 @@ This script will add Azure targets to your Turbonomic instances using a CSV file
 
 DESCRIPTION
 ===========
-Use this script to add Azure targets into Turbonomic using a CSV file as well as add the Reader role to the Clients specified in the CSV file. 
+Use this script to add Azure targets into Turbonomic using a CSV file as well as add the Reader role to the Clients specified in the CSV file. If the target already exists inside of Turbonomic, this script will update the credentials to what you specify in the CSV.
 
 The CSV file must have the following columns:
 
